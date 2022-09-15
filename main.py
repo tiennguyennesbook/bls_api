@@ -2,37 +2,28 @@ from __future__ import annotations
 from typing import Iterator, List
 import requests
 import json
-from .data import series_data
+from typing import Union,Any
 from collections import namedtuple
-
-from .protocols import  series_list,series_id
+import os
+from .protocols import series_id,catalog,series_data,series_data_type
 class __base_lookup:
     @property
     def series_info(self)-> Iterator:
         for data in self._lookup_table:
-            series_id=data.get("Series Id:", None)
-            area=data.get("Area:", None)
-            area_type=data.get("Area Type:",None)
-            region=data.get("State/Region/Division:")
-            yield series_id,area,area_type,region
-
+            series_id=data.get("Series ID", None)
+            data_type=data.get("Data Type", None)
+            yield series_id,data_type
     @property
-    def series_id_list(self) -> series_list:
+    def series_id_list(self) -> series_id:
         series=[id_val[0] for id_val in self.series_info]
+        return series_id(id=series).id
 
-        return series_list(series=series)
-
-    def series_exist_check(self,id:series_id):
-        id=series_id(id=id).id
-        if id in self.series_id_list.series:
-            return True
-        else:
-            raise TypeError(f"No Existing Id In {self.__class__.__name__}")
-    def get_seriesId_info(self,id:series_id):
-        id=series_id(id=id).id
-        for id_,area,area_type,region in self.series_info:
-            if id == id_:
-                return area,area_type,region
+    def get_seriesId_info(self,id:series_id) -> Union[bool,Any]:
+        _id=series_id(id=id).id
+        for id_,data_type in self.series_info:
+            if _id == id_:
+                return data_type
+        return False
 
 class _api_config:
     endpoint="https://api.bls.gov/publicAPI/v2/timeseries/data/"
@@ -40,10 +31,12 @@ class _api_config:
 class series_object:
     def __new__(cls, id:series_id) ->series_object:
         obj=object.__new__(cls)
-        obj.id=series_id(id=id).id
+        obj._id=series_id(id=id).id
+
         obj._data=None
         obj._from_value=None
         obj._to_value=None
+        obj.pagination=0
         return obj
     @property
     def _from(self):
@@ -77,13 +70,27 @@ class series_object:
             return self._data
         else:
             ### call the api
-            self.id=[self.id]
-            data_requests=json.dumps({"seriesid":self.id,"startyear":str(self._from),"endyear":str(self._to), "registrationkey":self.token})
-            response=requests.post(_api_config.endpoint,data=data_requests,headers=_api_config.headers)
-            self._data=json.loads(response.text)
+            if isinstance(self._id,List):
+                self._id=self._id
+            elif isinstance(self._id,str):
+                self._id=[self._id]
 
-            return self._data
+            ### Limit 50
 
+            for index_ in range(self.pagination*50,len(self._id),50):
+                id_scrap=self._id[index_:index_+50]
+                if len(self._id)>50:
+                    self.pagination+=1
+
+                # print(id_scrap)
+
+
+                data_requests=json.dumps({"seriesid":id_scrap,"startyear":str(self._from),"endyear":str(self._to),"catalog":"true", "registrationkey":self.token})
+                response=requests.post(_api_config.endpoint,data=data_requests,headers=_api_config.headers)
+                self._data=json.loads(response.text)
+
+                yield self._data
+                break
 class _base:
     def __setattr__(self, attr, value) -> None:
         object.__setattr__(self, attr, value)
@@ -94,52 +101,44 @@ class _base:
 
 
     @property
-    def __getseriesobject__(self) -> Iterator:
+    def __getseriesobject__(self) -> series_object:
         for attri in self.__dict__:
             attri_val=self.__getattribute__(attri)
             if isinstance(attri_val,series_object):
-                yield attri_val
+                return attri_val
 class __add_series(_base):
 
 
-    def add_custom_series(self,series: series_list) ->object:
+    def add_custom_series(self,series: series_id) ->object:
         obj=self._new()
-        series=series_list(series=series).series
-        if isinstance(series, List):
-            for id in series:
-                if self.series_exist_check(id):
-                    ### creating another instance
-                    area,area_type,region=self.get_seriesId_info(id)
-
-                    obj.__setattr__(id,series_object(id))
-                    series_obj = obj.__getattribute__(id)
-                    series_obj.area = area
-                    series_obj.area_type = area_type
-                    series_obj.region = region
-                    series_obj.token = self.token
+        series=series_id(id=series).id
+        obj.__setattr__("all_series", series_object(series))
+        series_obj = obj.__getattribute__("all_series")
+        series_obj.token = self.token
         return obj
     def add_all_series(self):
+        ### This will have to return id with an array max 50
         obj=self._new()
-        for series_id,area,area_type,region in self.series_info:
-            if series_id != None:
-                obj.__setattr__(series_id,series_object(series_id))
-                series_obj=obj.__getattribute__(series_id)
-                series_obj.area=area
-                series_obj.area_type=area_type
-                series_obj.region=region
-                series_obj.token=self.token
+        obj.__setattr__("all_series", series_object(self.series_id_list))
+        series_obj = obj.__getattribute__("all_series")
+        series_obj.token = self.token
         return obj
 class labor_force(__base_lookup,__add_series):
+    path=os.path.dirname(__file__)
+    f=open(os.path.join(path,"labor_series.json"))
+    _lookup_table=json.load(f)
     def __init__(self):
         self._from_value = None
         self._to_value = None
         self._token=None
-
+        self.__token_list=None
     @property
     def token(self):
         return self._token
     @token.setter
     def token(self,value):
+        if isinstance(value,List):
+            self.__token_list=value
         self._token=value
         return self.token
 
@@ -171,24 +170,39 @@ class labor_force(__base_lookup,__add_series):
         self._to_value = value
         return self._to
 
-    _lookup_table=series_data
 
     def __iter__(self) -> Iterator:
-        for series_node in self.__getseriesobject__:
+            series_node=self.__getseriesobject__
+
             series_node._from=self._from
             series_node._to=self._to
-            for sub_ in series_node.get_data["Results"]["series"]:
-                seriesID = sub_["seriesID"]
-                sub_sub_data = sub_["data"]
-                for value in sub_sub_data:
-                    year = value["year"]
-                    period = value["period"]
-                    periodName = value["periodName"]
-                    val = value["value"]
-                    tuple_name=namedtuple(f"response_data","seriesID year period periodName value area area_type region ")
-                    data_return=tuple_name(seriesID,year,period,periodName,val, series_node.area,series_node.area_type,series_node.region)
-                    data_return=data_return._asdict()
-                    yield dict(data_return)
+            for data in series_node.get_data:
+                while True:
+                    status=data["status"]
+                    if status == "REQUEST_NOT_PROCESSED":
+                        self.__token_list.pop(0)
+                        if isinstance(self.__token_list,List):
+                            if len(self.__token_list)==0:
+                                yield ("API Limit Reach")
+                        elif self.__token_list==None:
+                            yield ("API Limit Reach")
+                        else:
+                            raise TypeError("Unknown value for Token_list")
+                        self.token=self.__token_list
+                        series_node.token=self.token
+                    else:
+                        break
+                ### if not succes return to this loo
+
+
+                for series in data["Results"]["series"]:
+                    series_id=series["seriesID"]
+                    data_type=self.get_seriesId_info(series_id)
+                    datas=series["data"]
+                    catalog_ = series["catalog"]
+                    catalog_["series_id"]=series_id
+                    for data in datas:
+                        yield(series_data(**data).dict(),catalog(**catalog_).dict(),series_data_type(data_type=data_type).dict())
 
 
 
