@@ -33,19 +33,45 @@ custom_series=instance.add_custom_series(["LAUMT531338000000006","LAUMT531338000
 custom_series._from=2017
 custom_series._to=2018
 ### now we can loop through the custom series to get the data:
-for data_ in custom_series:
-    print(data_)
+### This will return 3 types series_data, catalog, and data type
+for series_data,catalog,type_ in custom_series:
+    print(series_data)
+    print(catalog)
+    print(type_)
 """
-Output:
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M12', 'periodName': 'December', 'value': '115622', 'area': 'Bellingham, WA Metropolitan Sta
-tistical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M11', 'periodName': 'November', 'value': '115397', 'area': 'Bellingham, WA Metropolitan Sta
-tistical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M10', 'periodName': 'October', 'value': '114589', 'area': 'Bellingham, WA Metropolitan Stat
-istical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-....
-....
-....
+Output
+{'year': '2019', 'period': 'M12', 'value': '118566', 'periodName': 'December'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M11', 'value': '118456', 'periodName': 'November'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M10', 'value': '117918', 'periodName': 'October'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M09', 'value': '115242', 'periodName': 'September'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M08', 'value': '115526', 'periodName': 'August'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M07', 'value': '116541', 'periodName': 'July'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M06', 'value': '116374', 'periodName': 'June'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
+{'year': '2019', 'period': 'M05', 'value': '115558', 'periodName': 'May'}
+{'series_id': 'LAUMT531338000000006', 'series_title': 'Labor Force: Bellingham, WA Metropolitan Statistical Area (U)', 'seasonality': 'Not Seasonally Adjusted', 'survey_name': 'Local Area Unemployment Statistics', 'survey_abbreviation': 'LA', 'measure_data_type': 'l
+abor force', 'area': 'Bellingham, WA Metropolitan Statistical Area', 'area_type': 'Metropolitan areas'}
+{'data_type': None}
 """
 
 ### If you  want to get all the available series in Labor_Force
@@ -53,26 +79,11 @@ all_series=instance.add_all_series()
 all_series._from=2017
 all_series._to=2018
 
-for data_ in all_series:
-    print(data_)
+for series_data,catalog,type_ in all_series:
+    print(series_data)
+    print(catalog)
+    print(type_)
 
-"""
-Output:
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M12', 'periodName': 'December', 'value': '115622', 'area': 'Bellingham, WA Metropolitan Sta
-tistical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M11', 'periodName': 'November', 'value': '115397', 'area': 'Bellingham, WA Metropolitan Sta
-tistical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M10', 'periodName': 'October', 'value': '114589', 'area': 'Bellingham, WA Metropolitan Stat
-istical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-{'seriesID': 'LAUMT531338000000006', 'year': '2018', 'period': 'M09', 'periodName': 'September', 'value': '110890', 'area': 'Bellingham, WA Metropolitan St
-atistical Area', 'area_type': 'Metropolitan areas', 'region': 'Washington'}
-
-....
-....
-....
-....
-
-"""  
 
 ```
 ## License 
