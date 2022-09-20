@@ -12,7 +12,9 @@ class __base_lookup:
         for data in self._lookup_table:
             series_id=data.get("Series ID", None)
             data_type=data.get("Data Type", None)
-            yield series_id,data_type
+            industry=data.get("Industry", None)
+            supersector=data.get("Supersector", None)
+            yield series_id,data_type,industry,supersector
     @property
     def series_id_list(self) -> series_id:
         series=[id_val[0] for id_val in self.series_info]
@@ -20,9 +22,9 @@ class __base_lookup:
 
     def get_seriesId_info(self,id:series_id) -> Union[bool,Any]:
         _id=series_id(id=id).id
-        for id_,data_type in self.series_info:
+        for id_,data_type,industry,supersector in self.series_info:
             if _id == id_:
-                return data_type
+                return data_type, industry,supersector
         return False
 
 class _api_config:
@@ -90,7 +92,7 @@ class series_object:
                 self._data=json.loads(response.text)
 
                 yield self._data
-                break
+
 class _base:
     def __setattr__(self, attr, value) -> None:
         object.__setattr__(self, attr, value)
@@ -107,8 +109,6 @@ class _base:
             if isinstance(attri_val,series_object):
                 return attri_val
 class __add_series(_base):
-
-
     def add_custom_series(self,series: series_id) ->object:
         obj=self._new()
         series=series_id(id=series).id
@@ -139,6 +139,7 @@ class labor_force(__base_lookup,__add_series):
     def token(self,value):
         if isinstance(value,List):
             self.__token_list=value
+
         self._token=value
         return self.token
 
@@ -173,7 +174,6 @@ class labor_force(__base_lookup,__add_series):
 
     def __iter__(self) -> Iterator:
             series_node=self.__getseriesobject__
-
             series_node._from=self._from
             series_node._to=self._to
             for data in series_node.get_data:
@@ -196,14 +196,17 @@ class labor_force(__base_lookup,__add_series):
 
 
                 for series in data["Results"]["series"]:
+
                     series_id=series["seriesID"]
-                    data_type=self.get_seriesId_info(series_id)
-                    datas=series["data"]
-                    catalog_ = series["catalog"]
+                    data_type,industry,supersector=self.get_seriesId_info(series_id)
+
+                    datas=series.get("data",{})
+                    catalog_ = series.get("catalog",{})
                     catalog_["series_id"]=series_id
+                    catalog_["industry"]=industry
+                    catalog_["supersector"]=supersector
                     for data in datas:
                         yield(series_data(**data).dict(),catalog(**catalog_).dict(),series_data_type(data_type=data_type).dict())
-
 
 
 
